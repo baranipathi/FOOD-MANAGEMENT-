@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Impact and ESG | AnnaChakra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Hanken+Grotesk:wght@400;500;600;700&family=Noto+Sans+Tamil:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+.kpis{display:flex;flex-wrap:wrap;gap:12px 40px;margin:24px 0 8px}
+.kpis div{min-width:150px}
+.kpis b{display:block;font:800 2.5rem 'Bricolage Grotesque',sans-serif;line-height:1.05}
+.kpis span{font-size:.9rem;color:var(--ink2)}
+.chart{width:100%;height:auto;background:#fff;border:1px solid var(--line);border-radius:4px}
+@media print{body.pc .pagehead,body.pc .strip,body.pc main>section:not(#costSection),body.pc #costSection .split>div:first-child,body.pc #costSection h2{display:none}body.pr .pagehead,body.pr main>section:not(#reportSection){display:none}body.pr #reportSection h2,body.pr #reportSection .lede{display:none}}
+.lg{display:flex;gap:18px;flex-wrap:wrap;font-size:.88rem;margin-top:8px}
+.lg i{display:inline-block;width:14px;height:4px;margin-right:6px;vertical-align:middle}
+</style>
+</head>
+<body>
+<header id="site-nav"></header>
+<main id="main">
+
+<div class="wrap pagehead">
+  <h1>Impact and ESG</h1>
+  <p class="lede">Managers act on rupees, ESG officers act on carbon and water, donors act on meals. AnnaChakra shows each of them the number they care about.</p>
+</div>
+
+<section>
+  <div class="wrap">
+    <div class="inline">
+      <h2 style="margin:0">Impact dashboard</h2>
+      <div style="width:200px"><label for="period" class="note" style="margin:0">Period</label>
+        <select id="period"><option value="1">This week</option><option value="4.3" selected>This month</option><option value="18">This semester</option></select></div>
+    </div>
+    <div class="kpis" id="kpis" aria-live="polite"></div>
+    <p class="note">Assumptions: 2.5 kg CO2e and 1,000 litres of water saved per kg of food kept from waste, 450 g per meal, Rs 45 average food cost and Rs 3 disposal cost per kg. Replace them with your own factors.</p>
+    <h3 style="margin-top:32px">Waste per week: with and without AnnaChakra</h3>
+    <div id="trend"></div>
+    <div class="lg"><span><i style="background:#8A97A0"></i>Without (baseline)</span><span><i style="background:#2F7D4F"></i>With AnnaChakra</span></div>
+  </div>
+</section>
+
+<section class="band" id="costSection">
+  <div class="wrap split">
+    <div>
+      <h2>Where the rupees come from</h2>
+      <p>Savings are shown by source, because different owners in the organisation care about different lines.</p>
+      <div id="cost"></div>
+    </div>
+    <div>
+      <h2>Donor certificate</h2>
+      <div class="row noprint">
+        <div class="field"><label for="dName">Donor name</label><input type="text" id="dName" value="Sample Institute of Technology"></div>
+        <div class="field"><label for="dMeals">Meals donated</label><input type="number" id="dMeals" min="1" value="1240"></div>
+      </div>
+      <div class="cert" id="cert"></div>
+      <p style="margin-top:12px" class="noprint"><button class="btn gold small" id="printCert" type="button">Print certificate</button></p>
+    </div>
+  </div>
+</section>
+
+<section id="reportSection">
+  <div class="wrap">
+    <h2>One-click ESG report</h2>
+    <p class="lede">Choose what to include and generate a report you can print or save as a PDF. Indicators are laid out so they can be copied into an ESG or BRSR-style disclosure.</p>
+    <div class="split even noprint">
+      <div>
+        <div class="field"><label for="rOrg">Organisation</label><input type="text" id="rOrg" value="Sample Institute of Technology"></div>
+        <div class="field"><label for="rPer">Reporting period</label><select id="rPer"><option value="1">Last week</option><option value="4.3">Last month</option><option value="18">Last semester</option></select></div>
+      </div>
+      <div>
+        <p style="margin-bottom:6px"><b>Include</b></p>
+        <label class="check"><input type="checkbox" class="sec" value="waste" checked> Waste prevention</label>
+        <label class="check"><input type="checkbox" class="sec" value="carbon" checked> Carbon and water</label>
+        <label class="check"><input type="checkbox" class="sec" value="social" checked> Food donated</label>
+        <label class="check"><input type="checkbox" class="sec" value="ops" checked> Operational efficiency</label>
+        <p style="margin-top:14px"><button class="btn gold" id="genReport" type="button">Generate report</button> <button class="btn ghost" id="printReport" type="button" disabled>Print or save as PDF</button></p>
+      </div>
+    </div>
+    <div class="report" id="report" hidden></div>
+  </div>
+</section>
+
+</main>
+<footer id="site-foot"></footer>
+<script src="common.js"></script>
+<script>
+(function(){
+  const el=id=>document.getElementById(id);
+  const W={prevented:1860,redistributed:560};
+  const calc=k=>{const p=W.prevented*k,r=W.redistributed*k,t=p+r;return{p,r,t,meals:r*1000/450,co2:t*2.5,water:t,rs:t*45+t*3,food:t*45,disp:t*3};};
+  function kpis(){
+    const k=calc(+el('period').value);
+    const items=[[AC.fmt(k.meals),'meals rescued for people'],[AC.fmt(k.p),'kg prevented at source'],[AC.fmt(k.r),'kg redistributed'],[AC.fmt(k.co2),'kg CO2e avoided'],[AC.fmt(k.water),'kilolitres of water saved'],['Rs '+AC.fmt(k.rs),'saved']];
+    el('kpis').innerHTML=items.map(i=>'<div><b>'+i[0]+'</b><span>'+i[1]+'</span></div>').join('');
+    const parts=[['Food not bought',k.food,'#2F7D4F'],['Disposal and hauling',k.disp,'#F2A900']];
+    el('cost').innerHTML=parts.map(p=>'<div class="hbar" style="grid-template-columns:150px 1fr 90px"><span>'+p[0]+'</span><div class="track"><div class="fill" style="width:'+(p[1]/k.rs*100)+'%;background:'+p[2]+'"></div></div><span>Rs '+AC.fmt(p[1])+'</span></div>').join('')+'<p class="note">Energy and labour savings from processing units are added when sensor data is connected.</p>';
+  }
+  el('period').addEventListener('input',kpis);kpis();
+
+  // Trend
+  const r=AC.rng(5);
+  const base=Array.from({length:12},()=>Math.round(2600+(r()-.5)*180));
+  const withA=base.map((b,i)=>Math.round(b*(1-Math.min(.42,i*.045+(r()*.02)))));
+  (function(){
+    const Wd=560,H=260,pad=44,mx=2900,mn=1000;
+    const X=i=>pad+i/11*(Wd-pad-12),Y=v=>H-28-(v-mn)/(mx-mn)*(H-48);
+    const line=(d,c)=>'<polyline fill="none" stroke="'+c+'" stroke-width="3" points="'+d.map((v,i)=>X(i).toFixed(0)+','+Y(v).toFixed(0)).join(' ')+'"/>';
+    let g='<svg class="chart" viewBox="0 0 '+Wd+' '+H+'" role="img" aria-label="Weekly waste over 12 weeks, falling with AnnaChakra">';
+    [1000,1500,2000,2500].forEach(v=>{g+='<line x1="'+pad+'" x2="'+(Wd-12)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="#E1E6E9"/><text x="'+(pad-6)+'" y="'+(Y(v)+4)+'" font-size="11" text-anchor="end">'+v+'</text>';});
+    g+=line(base,'#8A97A0')+line(withA,'#2F7D4F')+'<text x="'+pad+'" y="'+(H-8)+'" font-size="11">Week 1</text><text x="'+(Wd-12)+'" y="'+(H-8)+'" font-size="11" text-anchor="end">Week 12</text><text x="4" y="14" font-size="11">kg per week</text></svg>';
+    el('trend').innerHTML=g;
+  })();
+
+  // Certificate
+  const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  function cert(){
+    const n=Math.max(1,+el('dMeals').value||1);
+    el('cert').innerHTML='<p style="margin:0 auto 8px">AnnaChakra certificate of food rescue</p><h3>'+esc(el('dName').value||'Donor')+'</h3><p style="margin:0 auto">rescued <b>'+AC.fmt(n)+' meals</b> that would have been wasted.<br>That is about '+AC.fmt(n*.45)+' kg of food and '+AC.fmt(n*.45*2.5)+' kg CO2e avoided.</p><p class="note" style="margin:16px auto 0">Issued '+new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})+'. Sample certificate.</p>';
+  }
+  ['dName','dMeals'].forEach(id=>el(id).addEventListener('input',cert));cert();
+  el('printCert').addEventListener('click',()=>{document.body.classList.add('pc');window.print();document.body.classList.remove('pc');});
+
+  // Report
+  el('genReport').addEventListener('click',()=>{
+    const k=calc(+el('rPer').value),on=v=>document.querySelector('.sec[value="'+v+'"]').checked;
+    const per=el('rPer').selectedOptions[0].textContent.toLowerCase();
+    const tbl=rows=>'<table><thead><tr><th>Indicator</th><th class="num">Value</th></tr></thead><tbody>'+rows.map(x=>'<tr><td>'+x[0]+'</td><td class="num">'+x[1]+'</td></tr>').join('')+'</tbody></table>';
+    let h='<h2>Food waste and sustainability report</h2><p><b>'+esc(el('rOrg').value)+'</b>, '+per+'. Generated '+new Date().toLocaleDateString('en-IN')+'.</p>';
+    if(on('waste'))h+='<h3>Waste prevention</h3>'+tbl([['Food waste prevented at source (kg)',AC.fmt(k.p)],['Food redistributed (kg)',AC.fmt(k.r)],['Total diverted from disposal (kg)',AC.fmt(k.t)]]);
+    if(on('carbon'))h+='<h3>Carbon and water</h3>'+tbl([['GHG emissions avoided (kg CO2e)',AC.fmt(k.co2)],['Water saved (kilolitres)',AC.fmt(k.water)]]);
+    if(on('social'))h+='<h3>Food donated</h3>'+tbl([['Meals donated to shelters and food banks',AC.fmt(k.meals)],['Partner organisations served','5']]);
+    if(on('ops'))h+='<h3>Operational efficiency</h3>'+tbl([['Estimated cost saved (Rs)',AC.fmt(k.rs)],['Food cost avoided (Rs)',AC.fmt(k.food)],['Disposal cost avoided (Rs)',AC.fmt(k.disp)]]);
+    h+='<p class="note" style="margin-top:20px">Method: forecast-based production cuts and confirmed rescue deliveries. Emission and water factors are sample assumptions (2.5 kg CO2e and 1,000 litres per kg) and should be replaced with the organisation\'s approved factors.</p>';
+    el('report').innerHTML=h;el('report').hidden=false;el('printReport').disabled=false;
+    el('report').scrollIntoView({behavior:'smooth',block:'start'});
+  });
+  el('printReport').addEventListener('click',()=>{document.body.classList.add('pr');window.print();document.body.classList.remove('pr');});
+})();
+</script>
+</body>
+</html>

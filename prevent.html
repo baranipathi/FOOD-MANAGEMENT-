@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prevent | AnnaChakra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Hanken+Grotesk:wght@400;500;600;700&family=Noto+Sans+Tamil:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+.heat td{padding:3px}
+.heat button{font:inherit;font-weight:600;width:100%;min-width:52px;padding:10px 4px;border:2px solid transparent;border-radius:3px;cursor:pointer;color:var(--ink)}
+.heat button.dark{color:#fff}
+.heat button[aria-pressed=true]{border-color:var(--ink);box-shadow:0 0 0 2px #fff inset}
+.heat th{border-bottom:2px solid var(--ink);font-size:.85rem}
+.heat td:first-child{font-weight:600;white-space:nowrap;padding-right:12px}
+.legend{display:flex;align-items:center;gap:8px;font-size:.85rem;margin-top:10px}
+.legend i{display:block;width:160px;height:10px;background:linear-gradient(90deg,rgb(62,155,95),rgb(242,193,46),rgb(209,56,44));border-radius:2px}
+.mapsvg{width:100%;height:auto;background:#fff;border:1px solid var(--line);border-radius:4px}
+.mapsvg g{cursor:pointer}
+.actfirst{list-style:none;margin:0;padding:0}
+.actfirst li{padding:10px 0;border-bottom:1px solid var(--line)}
+.scanline{animation:scan 1.1s linear 1}
+@keyframes scan{from{transform:translateX(0)}to{transform:translateX(300px)}}
+.screen{background:#0E1730;color:#fff;border-radius:6px;padding:28px;text-align:center;border:6px solid #8A97A0}
+.screen b{display:block;font:800 3.6rem 'Bricolage Grotesque',sans-serif;line-height:1;color:var(--gold)}
+.badge{display:inline-block;background:var(--gold);color:var(--ink);font-weight:700;font-size:.8rem;padding:2px 10px;border-radius:999px}
+tr.pick{background:#FFF6DC}
+tr.pick button{font-weight:700}
+.linkbtn{font:inherit;background:none;border:0;padding:0;text-decoration:underline;cursor:pointer;color:inherit;text-align:left}
+</style>
+</head>
+<body>
+<header id="site-nav"></header>
+<main id="main">
+
+<div class="wrap pagehead">
+  <h1>Prevent</h1>
+  <p class="lede">Seeing where food comes back, how much comes back, and from which dish is what lets managers act on the first day instead of the fourth week.</p>
+</div>
+
+<section>
+  <div class="wrap">
+    <h2>Food waste heatmap</h2>
+    <p class="lede">Red is high waste and green is low. Click any cell to see what is being wasted and what to change first.</p>
+    <div class="inline" style="margin-bottom:16px">
+      <div class="tabs" role="group" aria-label="View" style="margin:0">
+        <button type="button" id="vGrid" aria-pressed="true">Grid</button>
+        <button type="button" id="vMap" aria-pressed="false">Map</button>
+      </div>
+      <div class="tabs" role="group" aria-label="Scope" style="margin:0">
+        <button type="button" id="sCampus" aria-pressed="true">Campus</button>
+        <button type="button" id="sCity" aria-pressed="false">City</button>
+      </div>
+      <div style="min-width:150px"><label for="meal" class="note" style="margin:0">Meal</label>
+        <select id="meal"><option value="0">Breakfast</option><option value="1">Lunch</option><option value="2" selected>Dinner</option></select></div>
+      <div style="min-width:150px" id="dayWrap"><label for="dayS" class="note" style="margin:0">Day (map view)</label>
+        <select id="dayS"><option value="0">Monday</option><option value="1">Tuesday</option><option value="2">Wednesday</option><option value="3">Thursday</option><option value="4" selected>Friday</option><option value="5">Saturday</option><option value="6">Sunday</option></select></div>
+    </div>
+    <div class="split wide-left">
+      <div>
+        <div id="gridView" class="tablewrap"></div>
+        <div id="mapView" hidden></div>
+        <div class="legend"><span>Low</span><i></i><span>High</span><span class="note" style="margin-left:12px">kg wasted per meal service (sample data)</span></div>
+      </div>
+      <div>
+        <div class="panel" aria-live="polite"><h3 id="dTitle"></h3><p id="dText"></p><p class="out" id="dAct" style="font-size:1rem"></p></div>
+        <h3 style="margin-top:24px">Act first here</h3>
+        <ol class="actfirst" id="top3"></ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <h2>Dynamic portion intelligence</h2>
+    <p class="lede">Each dish gets a portion suggestion built from past leftovers, headcount and the menu. Dishes that come back get smaller portions. Dishes that finish stay as they are.</p>
+    <div class="split wide-left">
+      <div class="tablewrap"><table>
+        <thead><tr><th>Dish</th><th class="num">Portion now</th><th class="num">Comes back</th><th>Advice</th><th class="num">Suggested</th><th class="num">Rs saved per day</th></tr></thead>
+        <tbody id="portion"></tbody>
+      </table>
+      <p style="margin-top:12px"><b id="ptotal"></b></p></div>
+      <div class="panel">
+        <h3>Waste fingerprint: <span id="fpName"></span></h3>
+        <p class="note">A fingerprint is a dish's leftover pattern across the week. Select a dish to see its own.</p>
+        <div id="fp"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Tray-return photo scan</h2>
+    <p class="lede">A phone photo at the tray return estimates how much of each dish was left. This is the real data behind every fingerprint. The demo uses sample trays where a camera model would sit.</p>
+    <div class="split even">
+      <div>
+        <svg id="tray" viewBox="0 0 300 200" width="100%" role="img" aria-label="Food tray with four compartments" style="max-width:420px;background:#fff;border:1px solid var(--line);border-radius:4px"></svg>
+        <p style="margin-top:14px"><button class="btn gold" id="scanBtn" type="button">Scan next tray</button> <span class="note" id="scanMsg"></span></p>
+      </div>
+      <div>
+        <h3>Running fingerprint: <span id="trayCount">0</span> trays scanned</h3>
+        <div id="tally"><p class="note">Scan a tray to start.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <h2>Dining hall nudges</h2>
+    <p class="lede">Waste is easier to cut when everyone can see it. A screen at the hall exit and a hostel leaderboard make it visible.</p>
+    <div class="split even">
+      <div>
+        <div class="screen" aria-live="polite">
+          <p style="margin:0 auto 8px">Leftovers on trays so far today equal</p>
+          <b id="scrMeals">0</b>
+          <p style="margin:8px auto 0">meals for hungry people</p>
+          <p class="note" id="scrTarget" style="color:#B7C2D8;margin:12px auto 0"></p>
+        </div>
+        <div class="field" style="margin-top:16px"><label for="prog">Service progress (demo): <span id="progOut">40</span>%</label><input type="range" id="prog" min="0" max="100" value="40"></div>
+      </div>
+      <div>
+        <h3>Hostel leaderboard, this week</h3>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Hostel</th><th class="num">kg per 100 meals</th><th></th></tr></thead>
+          <tbody id="board"></tbody>
+        </table></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+<footer id="site-foot"></footer>
+<script src="common.js"></script>
+<script>
+(function(){
+  const el=id=>document.getElementById(id);
+  const DAYS=AC.DAYS,SH=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const DFAC=[1,1,1,1.05,1.3,1.2,.9];
+  const CAMPUS=[{n:'Hostel A',sz:1.15,x:90,y:90},{n:'Hostel B',sz:1,x:240,y:70},{n:'Hostel C',sz:.85,x:100,y:250},{n:'Girls hostel',sz:.95,x:420,y:90},{n:'Main mess',sz:1.3,x:290,y:190},{n:'Staff canteen',sz:.5,x:470,y:250}];
+  const CITY=[{n:'Engineering college',sz:1.2,x:90,y:80},{n:'Medical college hospital',sz:1.35,x:250,y:60},{n:'Govt school meal centre',sz:.9,x:430,y:100},{n:'Industrial canteen',sz:1,x:120,y:230},{n:'Catering hub',sz:1.1,x:300,y:180},{n:'Railway pantry',sz:.6,x:490,y:240},{n:'Temple kitchen',sz:.8,x:200,y:290},{n:'Hostel cluster',sz:1.25,x:390,y:290}];
+  const st={view:'grid',scope:'campus',sel:{l:0,d:4}};
+  const locs=()=>st.scope==='campus'?CAMPUS:CITY;
+  const meal=()=>+el('meal').value;
+  function val(loc,d,m){
+    const r=AC.rng(AC.hash(loc.n+d+m))();
+    let v=[14,22,26][m]*loc.sz*DFAC[d]*(.85+r*.3);
+    if(loc.n==='Hostel A'&&d===4&&m===2)v*=1.9;
+    return Math.round(v);
+  }
+  function top(loc,d,m){
+    const h=AC.hash(loc.n+'i'+d+m);
+    if(loc.n==='Hostel A'&&d===4&&m===2)return['Rice',61];
+    if(m===0)return[['Idli','Pongal','Chutney'][h%3],38+h%20];
+    return[['Rice','Rice','Sambar','Rice','Vegetable curry'][h%5],45+h%20];
+  }
+  function action(item,pct){
+    if(item==='Rice')return 'Cut rice production by about 12% and serve rice in two rounds.';
+    if(item==='Sambar')return 'Cook sambar in two smaller batches instead of one.';
+    if(item==='Vegetable curry')return 'Reduce curry quantity by about 10% and replace with a dry side.';
+    return 'Cook '+item.toLowerCase()+' in smaller batches and check demand after the first rush.';
+  }
+  function draw(){
+    const L=locs(),m=meal(),d0=+el('dayS').value;
+    if(st.sel.l>=L.length)st.sel.l=0;
+    if(st.view==='grid'){
+      let max=0;L.forEach(l=>{for(let d=0;d<7;d++)max=Math.max(max,val(l,d,m));});
+      let h='<table class="heat"><thead><tr><th></th>'+SH.map(s=>'<th>'+s+'</th>').join('')+'</tr></thead><tbody>';
+      L.forEach((l,i)=>{h+='<tr><td>'+l.n+'</td>';for(let d=0;d<7;d++){const v=val(l,d,m),t=v/max;h+='<td><button type="button" class="'+(t>.7?'dark':'')+'" style="background:'+AC.heat(t)+'" aria-pressed="'+(st.sel.l===i&&st.sel.d===d)+'" data-l="'+i+'" data-d="'+d+'" aria-label="'+l.n+', '+DAYS[d]+', '+v+' kg">'+v+'</button></td>';}h+='</tr>';});
+      el('gridView').innerHTML=h+'</tbody></table>';
+    }else{
+      let max=0;L.forEach(l=>{max=Math.max(max,val(l,d0,m));});
+      let g='<svg class="mapsvg" viewBox="0 0 560 340" role="img" aria-label="Map of waste by location"><g stroke="#CDD5DA" stroke-width="10" fill="none" stroke-linecap="round"><path d="M20 170H540M280 20V320M90 90L420 90M100 250L490 250"/></g>';
+      L.forEach((l,i)=>{const v=val(l,d0,m),t=v/max,r=16+t*20;g+='<g data-l="'+i+'" tabindex="0" role="button" aria-label="'+l.n+', '+v+' kg"><circle cx="'+l.x+'" cy="'+l.y+'" r="'+r+'" fill="'+AC.heat(t)+'" stroke="'+(st.sel.l===i?'#14213D':'#fff')+'" stroke-width="3"/><text x="'+l.x+'" y="'+(l.y+4)+'" text-anchor="middle" font-size="12" font-weight="700" fill="'+(t>.7?'#fff':'#14213D')+'">'+v+'</text><text x="'+l.x+'" y="'+(l.y+r+15)+'" text-anchor="middle" font-size="11" fill="#14213D" stroke="#fff" stroke-width="3" paint-order="stroke">'+l.n+'</text></g>';});
+      el('mapView').innerHTML=g+'</svg>';
+    }
+    detail();topList();
+  }
+  function detail(){
+    const L=locs(),l=L[st.sel.l],m=meal(),d=st.view==='map'?+el('dayS').value:st.sel.d;
+    if(st.view==='map')st.sel.d=d;
+    const v=val(l,d,m),t=top(l,d,m);
+    el('dTitle').textContent=l.n+', '+DAYS[d]+' '+['breakfast','lunch','dinner'][m];
+    el('dText').textContent=v+' kg wasted, mostly '+t[0].toLowerCase()+' ('+t[1]+'% of the leftovers).';
+    el('dAct').textContent=action(t[0],t[1]);
+  }
+  function topList(){
+    const L=locs(),all=[];
+    L.forEach((l,i)=>{for(let m=0;m<3;m++)for(let d=0;d<7;d++)all.push({i,d,m,v:val(l,d,m)});});
+    all.sort((a,b)=>b.v-a.v);
+    el('top3').innerHTML=all.slice(0,3).map(a=>{const l=L[a.i],t=top(l,a.d,a.m);return '<li><b>'+l.n+', '+DAYS[a.d]+' '+['breakfast','lunch','dinner'][a.m]+'</b><br>'+a.v+' kg, mostly '+t[0].toLowerCase()+'.</li>';}).join('');
+  }
+  el('gridView').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;st.sel={l:+b.dataset.l,d:+b.dataset.d};draw();});
+  const mapPick=e=>{const g=e.target.closest('g[data-l]');if(!g)return;if(e.type==='keydown'&&e.key!=='Enter'&&e.key!==' ')return;st.sel.l=+g.dataset.l;draw();};
+  el('mapView').addEventListener('click',mapPick);el('mapView').addEventListener('keydown',mapPick);
+  function setPressed(a,b,on){el(a).setAttribute('aria-pressed',on);el(b).setAttribute('aria-pressed',!on);}
+  el('vGrid').onclick=()=>{st.view='grid';setPressed('vGrid','vMap',true);el('gridView').hidden=false;el('mapView').hidden=true;draw();};
+  el('vMap').onclick=()=>{st.view='map';setPressed('vGrid','vMap',false);el('gridView').hidden=true;el('mapView').hidden=false;el('dayS').value=st.sel.d;draw();};
+  el('sCampus').onclick=()=>{st.scope='campus';setPressed('sCampus','sCity',true);draw();};
+  el('sCity').onclick=()=>{st.scope='city';setPressed('sCampus','sCity',false);draw();};
+  el('meal').oninput=draw;el('dayS').oninput=draw;
+  draw();
+
+  // Portion intelligence
+  const PORT=[{n:'Rice',cur:220,w:18,c:18},{n:'Chapati',cur:90,w:5,c:60},{n:'Sambar',cur:150,w:12,c:35},{n:'Vegetable curry',cur:100,w:9,c:70},{n:'Curd',cur:80,w:4,c:60},{n:'Payasam',cur:60,w:15,c:90}];
+  let pSel=0,ptot=0;
+  function portions(){
+    ptot=0;
+    el('portion').innerHTML=PORT.map((p,i)=>{
+      const r=p.w>=15?Math.round(p.w*.65):p.w>=9?Math.round(p.w*.4):0;
+      const nw=Math.round(p.cur*(1-r/100)/5)*5,save=640*(p.cur-nw)/1000*p.c;ptot+=save;
+      p.newP=nw;
+      return '<tr class="'+(i===pSel?'pick':'')+'"><td><button class="linkbtn" type="button" data-i="'+i+'">'+p.n+'</button></td><td class="num">'+p.cur+' g</td><td class="num">'+p.w+'%</td><td>'+(r?'<span class="chip warn">Reduce '+r+'%</span>':'<span class="chip ok">Keep</span>')+'</td><td class="num">'+nw+' g</td><td class="num">'+AC.fmt(save)+'</td></tr>';
+    }).join('');
+    el('ptotal').textContent='Together: about Rs '+AC.fmt(ptot)+' saved per day, Rs '+AC.fmt(ptot*30)+' per month, at 640 servings a day (sample).';
+    const p=PORT[pSel];el('fpName').textContent=p.n;
+    const r=AC.rng(AC.hash(p.n));
+    const bias=[0,0,0,.05,.3,.2,.05];
+    const vals=bias.map(b=>Math.round(p.w*(1+b)*(.9+r()*.2)));
+    const mx=Math.max.apply(null,vals);
+    el('fp').innerHTML=vals.map((v,d)=>'<div class="hbar" style="grid-template-columns:50px 1fr 50px"><span>'+SH[d]+'</span><div class="track"><div class="fill '+(v===mx?'red':'')+'" style="width:'+(v/mx*100)+'%"></div></div><span>'+v+'%</span></div>').join('');
+  }
+  el('portion').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;pSel=+b.dataset.i;portions();});
+  portions();
+
+  // Tray scan
+  const TRAYS=[{n:'Tray 214',l:[35,0,20,10]},{n:'Tray 215',l:[5,0,0,0]},{n:'Tray 216',l:[60,10,40,50]},{n:'Tray 217',l:[20,35,15,25]}];
+  const FOOD=[['Rice','#F3EBD3'],['Chapati','#D9A75E'],['Sambar','#C2611F'],['Curry','#6B8E3A']];
+  let tIdx=-1,tCount=0,tSum=[0,0,0,0];
+  function trayDraw(tr,scanning){
+    const pos=[[15,15],[155,15],[15,105],[155,105]];
+    let h='<rect x="4" y="4" width="292" height="192" rx="10" fill="#C9D1D6" stroke="#8A97A0"/>';
+    pos.forEach((p,i)=>{const pc=tr?tr.l[i]:0,hh=Math.round(pc/100*80);
+      h+='<rect x="'+p[0]+'" y="'+p[1]+'" width="130" height="80" rx="6" fill="#EEF1F3" stroke="#8A97A0"/>'+
+      (tr?'<rect x="'+p[0]+'" y="'+(p[1]+80-hh)+'" width="130" height="'+hh+'" rx="4" fill="'+FOOD[i][1]+'"/>':'')+
+      '<text x="'+(p[0]+65)+'" y="'+(p[1]+45)+'" text-anchor="middle" font-size="12" font-weight="700" fill="#14213D" stroke="#fff" stroke-width="3" paint-order="stroke">'+FOOD[i][0]+(tr&&!scanning?' '+pc+'% left':'')+'</text>';});
+    if(scanning)h+='<rect class="scanline" x="0" y="4" width="4" height="192" fill="#D1382C"/>';
+    el('tray').innerHTML=h;
+  }
+  trayDraw(null,false);
+  el('scanBtn').addEventListener('click',()=>{
+    tIdx=(tIdx+1)%TRAYS.length;const tr=TRAYS[tIdx];
+    el('scanBtn').disabled=true;el('scanMsg').textContent='Scanning '+tr.n+'...';
+    trayDraw(tr,true);
+    setTimeout(()=>{
+      trayDraw(tr,false);tCount++;tr.l.forEach((v,i)=>tSum[i]+=v);
+      el('trayCount').textContent=tCount;
+      el('tally').innerHTML=FOOD.map((f,i)=>{const a=Math.round(tSum[i]/tCount);return '<div class="hbar"><span>'+f[0]+'</span><div class="track"><div class="fill '+(a>=25?'red':'')+'" style="width:'+Math.min(100,a*1.6)+'%"></div></div><span>'+a+'%</span></div>';}).join('')+'<p class="note">Average share left on the tray. These numbers update the portion advice above.</p>';
+      el('scanMsg').textContent=tr.n+' scanned.';el('scanBtn').disabled=false;
+    },1150);
+  });
+
+  // Nudges
+  const BOARD=[['Hostel B',1.8],['Girls hostel',2.1],['Hostel C',2.6],['Main mess',3.0],['Hostel A',4.4]];
+  el('board').innerHTML=BOARD.map((b,i)=>'<tr><td>'+b[0]+'</td><td class="num">'+b[1].toFixed(1)+'</td><td>'+(b[1]<2?'<span class="badge">Zero-waste day streak</span>':i===BOARD.length-1?'<span class="chip bad">Most to gain</span>':'')+'</td></tr>').join('');
+  function screen(){
+    const p=+el('prog').value;el('progOut').textContent=p;
+    const kg=Math.round(p/100*41);
+    el('scrMeals').textContent=Math.round(kg*1000/450);
+    el('scrTarget').textContent=kg+' kg so far. Today\'s target: under 30 kg.';
+  }
+  el('prog').addEventListener('input',screen);screen();
+})();
+</script>
+</body>
+</html>

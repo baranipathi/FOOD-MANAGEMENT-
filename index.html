@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AnnaChakra: cook what will be eaten, share what won't be</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Hanken+Grotesk:wght@400;500;600;700&family=Noto+Sans+Tamil:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+.hero{padding:48px 0 64px}
+.hero .split{align-items:center}
+.hero .panel{margin-top:24px}
+.stage ul{padding-left:1.1em;margin:0 0 12px}
+.stage li{margin-bottom:.3em}
+dl.users{display:grid;grid-template-columns:200px 1fr;gap:14px 24px;margin:24px 0 0}
+dl.users dt{font-weight:700}
+dl.users dd{margin:0;color:var(--ink2)}
+@media(max-width:640px){dl.users{grid-template-columns:1fr;gap:2px}dl.users dd{margin-bottom:12px}}
+</style>
+</head>
+<body>
+<header id="site-nav"></header>
+<main id="main">
+
+<section class="hero">
+  <div class="wrap split">
+    <div>
+      <h1>Cook what will be eaten. Share what won't be.</h1>
+      <p class="lede">AnnaChakra forecasts each meal, trims portions before food is made, and sends real surplus to shelters and food banks while it is still safe. It is built for institutional kitchens and food processing units.</p>
+      <div class="panel">
+        <h3>Try tomorrow's dinner forecast</h3>
+        <div class="row">
+          <div class="field"><label for="day">Day</label>
+            <select id="day"><option value="0">Monday</option><option value="1">Tuesday</option><option value="2" selected>Wednesday</option><option value="3">Thursday</option><option value="4">Friday</option><option value="5">Saturday</option><option value="6">Sunday</option></select></div>
+          <div class="field"><label for="event">Event</label>
+            <select id="event"><option value="none">Nothing special</option><option value="exam">Exams</option><option value="fest">Fest</option><option value="holiday">Holiday</option></select></div>
+        </div>
+        <div class="field"><label for="planned">Meals planned: <span id="plannedOut">700</span></label>
+          <input type="range" id="planned" min="400" max="900" step="10" value="700"></div>
+        <label class="check"><input type="checkbox" id="rain"> It is raining</label>
+      </div>
+    </div>
+    <div class="plate-col">
+      <svg id="thali" viewBox="0 0 400 400" role="img" aria-label="A steel plate with rice, chapati, sambar and curry. Red areas show the leftover share expected for each dish."></svg>
+      <p class="note" style="text-align:center;margin:8px auto 0">The red area on each dish is the leftover we expect.</p>
+    </div>
+  </div>
+  <div class="wrap">
+    <p class="out" id="rec" aria-live="polite"></p>
+    <div class="split even">
+      <div><h3>Why</h3><ul class="tight" id="why"></ul></div>
+      <div>
+        <h3>Confidence: <span id="conf"></span></h3>
+        <div class="meter"><i id="confBar"></i></div>
+        <p style="margin-top:14px" id="save"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <h2>One loop, four stages</h2>
+    <p class="lede">Every stage feeds the next. What the tray scanner sees tomorrow becomes the forecast the day after.</p>
+    <div class="loop">
+      <div class="stage">
+        <h3>Predict</h3>
+        <ul><li>Kitchen digital twin</li><li>Event radar</li><li>Skip-this-meal button</li><li>Menu what-if simulator</li></ul>
+        <a href="predict.html">See prediction</a>
+      </div>
+      <div class="stage">
+        <h3>Prevent</h3>
+        <ul><li>Waste heatmap</li><li>Dynamic portion advice</li><li>Tray-return photo scan</li><li>Dining hall nudges</li></ul>
+        <a href="prevent.html">See prevention</a>
+      </div>
+      <div class="stage">
+        <h3>Redistribute</h3>
+        <ul><li>Rescue Window countdown</li><li>Need-based NGO matching</li><li>Volunteer riders and routes</li><li>Freshness Passport</li><li>Reuse planner and waste cascade</li></ul>
+        <a href="redistribute.html">See redistribution</a>
+      </div>
+      <div class="stage">
+        <h3>Prove</h3>
+        <ul><li>Carbon, water and rupee savings</li><li>One-click ESG report</li><li>Donor certificates</li><li>Tamil and WhatsApp staff tools</li></ul>
+        <a href="impact.html">See impact</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band-ink">
+  <div class="wrap">
+    <h2>Every ask in the problem statement has a home</h2>
+    <div class="tablewrap">
+    <table>
+      <thead><tr><th>The statement asks for</th><th>AnnaChakra does this</th><th>Where</th></tr></thead>
+      <tbody>
+        <tr><td>Predict demand and surplus in real time</td><td>Digital twin with event radar and live skip signals</td><td><a href="predict.html">Predict</a></td></tr>
+        <tr><td>Spot food near expiry or spoiling</td><td>Rescue Window timers, cold-chain alerts, tray photo scan</td><td><a href="redistribute.html">Redistribute</a></td></tr>
+        <tr><td>Connect surplus with NGOs and buyers</td><td>Need-based matching and a by-product marketplace</td><td><a href="redistribute.html">Redistribute</a></td></tr>
+        <tr><td>Optimise transport routes</td><td>Rider assignment and multi-stop route ordering</td><td><a href="redistribute.html">Redistribute</a></td></tr>
+        <tr><td>Monitor processing units</td><td>Storage monitor and line efficiency board</td><td><a href="processing.html">Processing units</a></td></tr>
+        <tr><td>Detect overproduction, losses, downtime, energy waste</td><td>Anomaly detector and yield tracker</td><td><a href="processing.html">Processing units</a></td></tr>
+        <tr><td>Sustainability analytics and ESG reports</td><td>Impact dashboard, report builder, donor certificates</td><td><a href="impact.html">Impact and ESG</a></td></tr>
+        <tr><td>Data-driven production planning</td><td>Recommendations, portions and ingredient orders</td><td><a href="predict.html">Predict</a></td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Built for the people in the kitchen</h2>
+    <dl class="users">
+      <dt>Kitchen manager</dt><dd>Sees tomorrow's plan, the reason behind it, and the money it saves.</dd>
+      <dt>Student or employee</dt><dd>Taps "skip this meal" and sees the hall's waste on a live screen.</dd>
+      <dt>Kitchen staff</dt><dd>Logs surplus in Tamil, by voice, or on WhatsApp, even with weak internet.</dd>
+      <dt>NGO or shelter</dt><dd>Posts daily needs and receives food with a freshness record.</dd>
+      <dt>Volunteer rider</dt><dd>Accepts pickups and follows an ordered route.</dd>
+      <dt>Factory supervisor</dt><dd>Watches storage, downtime, energy and yield, and sells by-products.</dd>
+      <dt>ESG officer</dt><dd>Downloads the report without chasing spreadsheets.</dd>
+    </dl>
+    <p style="margin-top:32px"><a class="btn gold" href="about.html">Read the full problem statement</a></p>
+  </div>
+</section>
+
+</main>
+<footer id="site-foot"></footer>
+<script src="common.js"></script>
+<script>
+(function(){
+  const el=id=>document.getElementById(id);
+  const s={planned:700,day:2,event:'none',rain:false,skips:0};
+  function run(){
+    s.planned=+el('planned').value;s.day=+el('day').value;s.event=el('event').value;s.rain=el('rain').checked;
+    el('plannedOut').textContent=s.planned;
+    const f=AC.forecast(s);
+    AC.renderThali(el('thali'),f);
+    el('rec').textContent=AC.describe(f,s);
+    el('why').innerHTML=f.reasons.map(r=>'<li>'+r+'</li>').join('');
+    el('conf').textContent=f.conf+'%';
+    el('confBar').style.width=f.conf+'%';
+    el('save').textContent='Acting on this saves about '+AC.fmt(f.savedKg)+' kg of food, Rs '+AC.fmt(f.savedRs)+' and '+AC.fmt(f.co2)+' kg CO2e for this one meal (sample model).';
+  }
+  ['planned','day','event','rain'].forEach(id=>el(id).addEventListener('input',run));
+  run();
+})();
+</script>
+</body>
+</html>

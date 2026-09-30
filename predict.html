@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Predict | AnnaChakra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Hanken+Grotesk:wght@400;500;600;700&family=Noto+Sans+Tamil:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+.big{font:800 2.6rem 'Bricolage Grotesque',sans-serif;line-height:1}
+.stats{display:flex;gap:32px;flex-wrap:wrap;margin-bottom:20px}
+.stats div span{display:block;font-size:.88rem;color:var(--ink2)}
+.evlist{list-style:none;padding:0;margin:0}
+.evlist li{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.delta-good{color:#1B5A37;font-weight:700}.delta-bad{color:#8E211A;font-weight:700}
+</style>
+</head>
+<body>
+<header id="site-nav"></header>
+<main id="main">
+
+<div class="wrap pagehead">
+  <h1>Predict</h1>
+  <p class="lede">A digital twin of the kitchen learns how many people eat, which dishes come back on trays, and how weather, events and holidays change both. It then advises before anything is cooked.</p>
+</div>
+
+<section>
+  <div class="wrap split">
+    <div class="panel">
+      <h2>Kitchen digital twin</h2>
+      <div class="row">
+        <div class="field"><label for="day">Day</label>
+          <select id="day"><option value="0">Monday</option><option value="1">Tuesday</option><option value="2" selected>Wednesday</option><option value="3">Thursday</option><option value="4">Friday</option><option value="5">Saturday</option><option value="6">Sunday</option></select></div>
+        <div class="field"><label for="event">Event</label>
+          <select id="event"><option value="none">Nothing special</option><option value="exam">Exams</option><option value="fest">Fest</option><option value="holiday">Holiday</option></select></div>
+      </div>
+      <div class="field"><label for="planned">Meals planned: <span id="plannedOut">700</span></label>
+        <input type="range" id="planned" min="400" max="900" step="10" value="700"></div>
+      <label class="check" style="margin-bottom:20px"><input type="checkbox" id="rain"> It is raining</label>
+      <h3>Skip-this-meal button</h3>
+      <p class="note">Diners tap "skip" or "I'll eat" in the app. Each answer sharpens the forecast. In this demo every skip lowers expected diners by one.</p>
+      <div class="inline">
+        <button class="btn gold small" id="skipBtn" type="button">Simulate 25 students skipping</button>
+        <button class="btn ghost small" id="skipReset" type="button">Reset</button>
+        <span><b id="skipCount">0</b> skips so far</span>
+      </div>
+    </div>
+    <div>
+      <div class="stats">
+        <div><b class="big" id="expected"></b><span>expected diners</span></div>
+        <div><b class="big" id="rec"></b><span>cook for</span></div>
+        <div><b class="big" id="conf"></b><span>confidence</span></div>
+      </div>
+      <div class="meter"><i id="confBar"></i></div>
+      <p class="out" id="sentence" aria-live="polite"></p>
+      <h3>Why this advice</h3>
+      <ul class="tight" id="why"></ul>
+      <div class="tablewrap">
+      <table>
+        <thead><tr><th>Dish</th><th class="num">Planned kg</th><th class="num">Likely waste</th><th class="num">Cut production</th><th class="num">Saved kg</th></tr></thead>
+        <tbody id="items"></tbody>
+      </table></div>
+      <p class="note" id="savings" style="margin-top:10px"></p>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <h2>Event radar</h2>
+    <p class="lede">AnnaChakra reads the campus or company calendar and adjusts every day's headcount. The dashed line is the current plan.</p>
+    <div class="split wide-left">
+      <div>
+        <div class="vbars" id="week"></div>
+        <div class="vlabels" id="weekLabels"></div>
+      </div>
+      <div>
+        <h3>Coming up this week</h3>
+        <ul class="evlist" id="events"></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Menu what-if simulator</h2>
+    <p class="lede">Before the menu is published, swap a dish and see how much waste, money and carbon it changes.</p>
+    <div class="split wide-right">
+      <div class="panel">
+        <div class="field"><label for="curDish">Planned dish</label><select id="curDish"></select></div>
+        <div class="field"><label for="newDish">Swap for</label><select id="newDish"></select></div>
+        <div class="field"><label for="servings">Servings</label><input type="number" id="servings" min="50" max="3000" value="600"></div>
+      </div>
+      <div>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Measure</th><th class="num">Planned</th><th class="num">Swap</th><th class="num">Change</th></tr></thead>
+          <tbody id="whatif"></tbody>
+        </table></div>
+        <p class="out" id="whatifSay"></p>
+        <p class="note">Dish figures are sample values for the demo.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <h2>Ingredient-level planning</h2>
+    <p class="lede">The forecast flows back to raw materials, so purchasing follows expected diners and not the original plan.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Ingredient</th><th class="num">Original order</th><th class="num">Recommended</th><th class="num">Rs saved</th></tr></thead>
+      <tbody id="ingr"></tbody>
+    </table></div>
+  </div>
+</section>
+
+</main>
+<footer id="site-foot"></footer>
+<script src="common.js"></script>
+<script>
+(function(){
+  const el=id=>document.getElementById(id);
+  const s={planned:700,day:2,event:'none',rain:false,skips:0};
+  const SCHED=['none','exam','exam','none','fest','none','holiday'];
+  const EVENTS=[{d:1,ev:'exam',t:'Semester exams begin'},{d:4,ev:'fest',t:'Department fest'},{d:6,ev:'holiday',t:'Public holiday'}];
+  const SHORT=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const DISHES=[
+    {n:'Plain rice and sambar',w:16,c:24,g:520},
+    {n:'Lemon rice and curd',w:9,c:28,g:480},
+    {n:'Vegetable biryani and raita',w:12,c:42,g:760},
+    {n:'Chapati and dal',w:6,c:30,g:410},
+    {n:'Curd rice and pickle',w:8,c:20,g:390},
+    {n:'Pongal and chutney',w:11,c:22,g:350}
+  ];
+  const INGR=[['Rice (raw), kg',.075,48],['Wheat flour, kg',.05,38],['Toor dal, kg',.03,130],['Vegetables, kg',.15,35],['Cooking oil, litres',.012,140],['Curd, litres',.1,60]];
+
+  function run(){
+    s.planned=+el('planned').value;s.day=+el('day').value;s.event=el('event').value;s.rain=el('rain').checked;
+    el('plannedOut').textContent=s.planned;
+    const f=AC.forecast(s);
+    el('expected').textContent=f.expected;el('rec').textContent=f.rec;el('conf').textContent=f.conf+'%';
+    el('confBar').style.width=f.conf+'%';
+    el('sentence').textContent=AC.describe(f,s);
+    el('why').innerHTML=f.reasons.map(r=>'<li>'+r+'</li>').join('');
+    el('items').innerHTML=f.items.map(i=>'<tr><td>'+i.name+'</td><td class="num">'+i.kg.toFixed(0)+'</td><td class="num">'+i.waste+'%</td><td class="num">'+i.cut+'%</td><td class="num">'+i.savedKg.toFixed(1)+'</td></tr>').join('');
+    el('savings').textContent='Total for this meal: '+AC.fmt(f.savedKg)+' kg food, Rs '+AC.fmt(f.savedRs)+', '+AC.fmt(f.co2)+' kg CO2e.';
+    el('skipCount').textContent=s.skips;
+    week();ingredients(f);
+  }
+  function week(){
+    const max=850;
+    const data=SCHED.map((ev,d)=>AC.forecast({planned:s.planned,day:d,event:ev,rain:false,skips:0}).expected);
+    el('week').innerHTML='<div class="planline" style="bottom:'+(s.planned/max*100)+'%"></div>'+data.map((v,d)=>'<div class="vbar'+(d===s.day?' sel':'')+'"><span>'+v+'</span><b style="height:'+(v/max*88)+'%"></b></div>').join('');
+    el('weekLabels').innerHTML=SHORT.map((n,d)=>'<div>'+n+(SCHED[d]!=='none'?'<br><small>'+SCHED[d]+'</small>':'')+'</div>').join('');
+  }
+  function ingredients(f){
+    el('ingr').innerHTML=INGR.map(r=>{
+      const a=s.planned*r[1],b=f.rec*r[1],save=(a-b)*r[2];
+      return '<tr><td>'+r[0]+'</td><td class="num">'+a.toFixed(1)+'</td><td class="num">'+b.toFixed(1)+'</td><td class="num">'+(save>0?AC.fmt(save):'0')+'</td></tr>';
+    }).join('');
+  }
+  function whatif(){
+    const a=DISHES[+el('curDish').value],b=DISHES[+el('newDish').value],n=Math.max(1,+el('servings').value||0);
+    const m=d=>({w:n*d.w/100,c:n*d.w/100*d.c,g:n*d.w/100*d.g/1000});
+    const A=m(a),B=m(b);
+    const row=(label,x,y,unit,dec)=>{const d=y-x;return '<tr><td>'+label+'</td><td class="num">'+x.toFixed(dec)+unit+'</td><td class="num">'+y.toFixed(dec)+unit+'</td><td class="num '+(d<0?'delta-good':d>0?'delta-bad':'')+'">'+(d>0?'+':'')+d.toFixed(dec)+unit+'</td></tr>';};
+    el('whatif').innerHTML=row('Waste rate',a.w,b.w,'%',0)+row('Wasted servings',A.w,B.w,'',0)+row('Wasted food value',A.c,B.c,' Rs',0)+row('Carbon from waste',A.g,B.g,' kg',0);
+    const d=A.w-B.w;
+    el('whatifSay').textContent=d>0?'Swapping to '+b.n+' would prevent about '+Math.round(d)+' wasted servings and Rs '+AC.fmt(A.c-B.c)+' of wasted food.':d<0?b.n+' would waste about '+Math.round(-d)+' more servings than '+a.n+'.':'No change in expected waste.';
+  }
+  ['planned','day','event','rain'].forEach(id=>el(id).addEventListener('input',run));
+  el('skipBtn').addEventListener('click',()=>{s.skips+=25;run();});
+  el('skipReset').addEventListener('click',()=>{s.skips=0;run();});
+  el('events').innerHTML=EVENTS.map((e,i)=>'<li><span><b>'+AC.DAYS[e.d]+'</b><br>'+e.t+'</span><button class="btn ghost small" data-i="'+i+'" type="button">Apply to forecast</button></li>').join('');
+  el('events').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const ev=EVENTS[+b.dataset.i];el('day').value=ev.d;el('event').value=ev.ev;run();});
+  const opts=DISHES.map((d,i)=>'<option value="'+i+'">'+d.n+'</option>').join('');
+  el('curDish').innerHTML=opts;el('newDish').innerHTML=opts;el('newDish').value=1;
+  ['curDish','newDish','servings'].forEach(id=>el(id).addEventListener('input',whatif));
+  run();whatif();
+})();
+</script>
+</body>
+</html>

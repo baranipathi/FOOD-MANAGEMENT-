@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Staff app | AnnaChakra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Hanken+Grotesk:wght@400;500;600;700&family=Noto+Sans+Tamil:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+.wa{max-width:400px;margin:0 auto}
+.wa .bar{background:#075E54;color:#fff;padding:10px 14px;border-radius:12px 12px 0 0;font-weight:700}
+.wa .chat{border-radius:0}
+.wa form{display:flex;gap:6px;background:#F0F0F0;padding:8px;border-radius:0 0 12px 12px}
+.wa form input{flex:1}
+.logs{list-style:none;margin:0;padding:0}
+.logs li{padding:8px 0;border-bottom:1px solid var(--line);font-size:.93rem}
+.heard{min-height:1.4em;font-size:.9rem;color:var(--ink2)}
+</style>
+</head>
+<body>
+<header id="site-nav"></header>
+<main id="main">
+
+<div class="wrap pagehead">
+  <h1>Staff app</h1>
+  <p class="lede">Kitchen staff are busy, may prefer Tamil, and cannot count on good internet. So logging surplus takes one tap, one sentence spoken aloud, or one WhatsApp message.</p>
+</div>
+
+<section>
+  <div class="wrap split even">
+    <div>
+      <h2>Tap or speak</h2>
+      <p>The same screen works in Tamil and English. Big buttons, no typing.</p>
+      <div class="tabs" role="group" aria-label="Language">
+        <button type="button" id="langEn" aria-pressed="true">English</button>
+        <button type="button" id="langTa" aria-pressed="false">தமிழ்</button>
+      </div>
+      <div class="phone">
+        <h3 id="pTitle"></h3>
+        <p id="pDish" style="margin-bottom:6px;font-weight:600"></p>
+        <div class="dishbtns" id="dishbtns"></div>
+        <p id="pQty" style="margin-bottom:0;font-weight:600"></p>
+        <div class="stepper"><button type="button" id="minus" aria-label="Fewer meals">-</button><output id="qty" aria-live="polite">20</output><button type="button" id="plus" aria-label="More meals">+</button></div>
+        <p class="inline" style="justify-content:center"><button class="btn ghost small" id="voice" type="button"></button><button class="btn gold" id="submit" type="button"></button></p>
+        <p class="heard" id="heard" aria-live="polite"></p>
+      </div>
+    </div>
+    <div>
+      <h2>WhatsApp bot</h2>
+      <p>Send a plain message. It works in Tamil and English, and it queues messages when the connection drops.</p>
+      <label class="check" style="margin-bottom:10px"><input type="checkbox" id="offline"> Phone is offline</label>
+      <div class="wa">
+        <div class="bar">AnnaChakra kitchen bot</div>
+        <div class="chat" id="chat" role="log" aria-live="polite"></div>
+        <form id="waForm"><label class="sr" for="waIn" style="position:absolute;left:-999px">Message</label><input type="text" id="waIn" placeholder="surplus rice 20" autocomplete="off"><button class="btn small" type="submit">Send</button></form>
+      </div>
+      <p class="note" style="margin-top:8px">Try: "surplus rice 20", "மீதம் சாதம் 20", or "chapati 35".</p>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <h2>Recent logs</h2>
+    <p class="note">Everything logged on this page appears here and would start a Rescue Window.</p>
+    <ul class="logs" id="logs"><li class="note">Nothing logged yet.</li></ul>
+  </div>
+</section>
+
+</main>
+<footer id="site-foot"></footer>
+<script src="common.js"></script>
+<script>
+(function(){
+  const el=id=>document.getElementById(id);
+  const S={
+    en:{title:'Log surplus food',dish:'Which food?',qty:'How many meals?',voice:'Speak to log',submit:'Log surplus',done:'Logged. Rescue Window is open.',heard:'Heard: ',nomic:'Voice input needs a browser with speech support, such as Chrome.',nonum:'Could not find a number. Try "rice 20".'},
+    ta:{title:'மீதமுள்ள உணவைப் பதிவு செய்',dish:'எந்த உணவு?',qty:'எத்தனை உணவுகள்?',voice:'பேசிப் பதிவு செய்',submit:'பதிவு செய்',done:'பதிவு செய்யப்பட்டது. மீட்பு நேரம் தொடங்கியது.',heard:'கேட்டது: ',nomic:'குரல் பதிவுக்கு Chrome போன்ற உலாவி தேவை.',nonum:'எண் கிடைக்கவில்லை. "சாதம் 20" என்று சொல்லவும்.'}
+  };
+  const DISH=[
+    {id:'rice',en:'Rice',ta:'சாதம்',k:['rice','sadam','சாதம்']},
+    {id:'chapati',en:'Chapati',ta:'சப்பாத்தி',k:['chapati','roti','சப்பாத்தி']},
+    {id:'sambar',en:'Sambar',ta:'சாம்பார்',k:['sambar','சாம்பார்']},
+    {id:'curry',en:'Curry',ta:'பொரியல்',k:['curry','poriyal','கறி','பொரியல்']}
+  ];
+  const st={lang:'en',dish:0,qty:20,logs:[]};
+  const isTa=t=>/[\u0B80-\u0BFF]/.test(t);
+  function parse(t){
+    const low=t.toLowerCase();
+    const d=DISH.findIndex(x=>x.k.some(k=>low.includes(k)));
+    const m=low.match(/\d+/);
+    return{dish:d,n:m?+m[0]:null};
+  }
+  const safeUntil=()=>new Date(Date.now()+3*3600*1000).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+  function addLog(d,n,via){
+    st.logs.unshift({d,n,via,time:new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})});
+    el('logs').innerHTML=st.logs.map(l=>'<li><b>'+l.n+' meals of '+DISH[l.d].en.toLowerCase()+'</b> at '+l.time+' via '+l.via+'. Rescue Window open, 3 nearby NGOs notified.</li>').join('');
+  }
+
+  // Phone
+  function paint(){
+    const s=S[st.lang];
+    el('pTitle').textContent=s.title;el('pDish').textContent=s.dish;el('pQty').textContent=s.qty;
+    el('voice').textContent=s.voice;el('submit').textContent=s.submit;
+    el('dishbtns').innerHTML=DISH.map((d,i)=>'<button type="button" data-i="'+i+'" aria-pressed="'+(i===st.dish)+'">'+d[st.lang]+'</button>').join('');
+    el('qty').textContent=st.qty;
+    el('langEn').setAttribute('aria-pressed',st.lang==='en');el('langTa').setAttribute('aria-pressed',st.lang==='ta');
+    document.documentElement.lang=st.lang==='ta'?'ta':'en';
+  }
+  el('langEn').onclick=()=>{st.lang='en';paint();};
+  el('langTa').onclick=()=>{st.lang='ta';paint();};
+  el('dishbtns').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;st.dish=+b.dataset.i;paint();});
+  el('minus').onclick=()=>{st.qty=Math.max(5,st.qty-5);paint();};
+  el('plus').onclick=()=>{st.qty=Math.min(500,st.qty+5);paint();};
+  el('submit').onclick=()=>{addLog(st.dish,st.qty,'app');el('heard').textContent=S[st.lang].done;};
+  el('voice').onclick=()=>{
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR){el('heard').textContent=S[st.lang].nomic;return;}
+    const r=new SR();r.lang=st.lang==='ta'?'ta-IN':'en-IN';r.interimResults=false;
+    r.onresult=e=>{
+      const t=e.results[0][0].transcript;el('heard').textContent=S[st.lang].heard+t;
+      const p=parse(t);
+      if(p.dish>=0)st.dish=p.dish;
+      if(p.n)st.qty=p.n;else el('heard').textContent+=' ('+S[st.lang].nonum+')';
+      paint();
+    };
+    r.onerror=()=>{el('heard').textContent=S[st.lang].nomic;};
+    r.start();
+  };
+  paint();
+
+  // WhatsApp bot
+  const queue=[];
+  function bubble(text,me,note){
+    const b=document.createElement('div');b.className='bubble'+(me?' me':'');b.textContent=text;
+    if(note){const s=document.createElement('small');s.textContent=note;b.appendChild(s);}
+    el('chat').appendChild(b);el('chat').scrollTop=el('chat').scrollHeight;
+  }
+  function reply(text){
+    const ta=isTa(text),p=parse(text);
+    if(p.dish<0||!p.n)return ta?'இப்படி அனுப்பவும்: மீதம் சாதம் 20':'Send it like this: surplus rice 20';
+    addLog(p.dish,p.n,'WhatsApp');
+    const t=safeUntil();
+    return ta?'பதிவு செய்யப்பட்டது: '+DISH[p.dish].ta+' '+p.n+' உணவுகள். பாதுகாப்பான நேரம் '+t+' வரை. அருகிலுள்ள 3 அமைப்புகளுக்குத் தகவல் அனுப்பப்பட்டது.':'Logged: '+p.n+' meals of '+DISH[p.dish].en.toLowerCase()+'. Rescue Window is open until '+t+'. 3 nearby NGOs notified.';
+  }
+  bubble('Hi! Send your surplus like "surplus rice 20". தமிழிலும் அனுப்பலாம்.',false);
+  el('waForm').addEventListener('submit',e=>{
+    e.preventDefault();
+    const t=el('waIn').value.trim();if(!t)return;el('waIn').value='';
+    if(el('offline').checked){queue.push(t);bubble(t,true,'Not sent yet');bubble('Saved on your phone. It will send when the internet returns ('+queue.length+' waiting).',false);return;}
+    bubble(t,true);setTimeout(()=>bubble(reply(t),false),500);
+  });
+  el('offline').addEventListener('change',()=>{
+    if(!el('offline').checked&&queue.length){
+      bubble('Back online. Sending '+queue.length+' saved message'+(queue.length>1?'s':'')+'.',false);
+      queue.splice(0).forEach((t,i)=>setTimeout(()=>bubble(reply(t),false),400*(i+1)));
+    }
+  });
+})();
+</script>
+</body>
+</html>

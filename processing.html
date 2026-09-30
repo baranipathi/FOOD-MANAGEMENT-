@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Processing units | AnnaChakra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Hanken+Grotesk:wght@400;500;600;700&family=Noto+Sans+Tamil:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+.units{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
+@media(max-width:700px){.units{grid-template-columns:1fr}}
+.unit{border-top:3px solid var(--ink);padding-top:10px}
+.unit .t{font:800 1.8rem 'Bricolage Grotesque',sans-serif}
+.unit svg{width:100%;height:70px;display:block}
+.alert{border-left:5px solid var(--chilli);background:#F7D3CF;padding:12px 16px;margin-bottom:16px;font-weight:600}
+.chart{width:100%;height:auto;background:#fff;border:1px solid var(--line);border-radius:4px}
+.eff{display:grid;grid-template-columns:150px 1fr 90px;gap:10px;align-items:center;margin:10px 0}
+.eff .track{background:var(--steel);height:16px;border-radius:2px;overflow:hidden}
+.eff .fill{height:100%}
+</style>
+</head>
+<body>
+<header id="site-nav"></header>
+<main id="main">
+
+<div class="wrap pagehead">
+  <h1>Processing units</h1>
+  <p class="lede">Factories lose food and money in quieter ways: a warm cold room, a machine that sits idle, an oven running for no reason. This page shows how AnnaChakra catches them.</p>
+</div>
+
+<section>
+  <div class="wrap">
+    <h2>Storage and cold-chain monitor</h2>
+    <p class="lede">Sensors report every few seconds. In the demo, time runs fast so you can see an alert form.</p>
+    <div class="inline" style="margin-bottom:16px">
+      <button class="btn gold" id="fault" type="button">Simulate a power cut on Cold room 1</button>
+      <button class="btn ghost" id="fix" type="button">Restore power</button>
+    </div>
+    <div id="alertBox" aria-live="assertive"></div>
+    <div class="units" id="units"></div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <h2>Anomaly detector</h2>
+    <p class="lede">The detector learns each unit's normal range and flags days that break it, with the checks to run first. Here it reads 30 days of sample data.</p>
+    <div class="tabs" role="group" aria-label="Metric">
+      <button type="button" data-m="0" aria-pressed="true">Energy use</button>
+      <button type="button" data-m="1" aria-pressed="false">Overproduction</button>
+      <button type="button" data-m="2" aria-pressed="false">Machine downtime</button>
+    </div>
+    <div class="split wide-left">
+      <div id="anChart"></div>
+      <div><h3>What the detector found</h3><div id="anList"></div></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap split">
+    <div>
+      <h2>Line efficiency</h2>
+      <p>Availability is the share of planned time each machine actually ran. Low availability with high energy use is where money leaks.</p>
+      <div id="eff"></div>
+    </div>
+    <div>
+      <h2>Raw material yield</h2>
+      <p>Batches that yield less than the recipe expects are flagged, so loss is caught the same day.</p>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Batch</th><th class="num">In (kg)</th><th class="num">Out (kg)</th><th class="num">Yield</th><th>Status</th></tr></thead>
+        <tbody id="yield"></tbody>
+      </table></div>
+    </div>
+  </div>
+</section>
+
+<section class="band-ink">
+  <div class="wrap">
+    <h2>By-product marketplace</h2>
+    <p class="lede">Peels, bran and off-spec batches are not waste if someone will buy them. List them once and let buyers request pickup.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th>By-product</th><th class="num">Quantity</th><th>Best use</th><th>Buyer type</th><th class="num">Indicative price</th><th></th></tr></thead>
+      <tbody id="market"></tbody>
+    </table></div>
+    <p class="note">Quantities and prices are sample values.</p>
+  </div>
+</section>
+
+</main>
+<footer id="site-foot"></footer>
+<script src="common.js"></script>
+<script>
+(function(){
+  const el=id=>document.getElementById(id);
+  // Cold chain
+  const U=[{n:'Cold room 1',lo:2,hi:5,t:3.5,h:[]},{n:'Cold room 2',lo:2,hi:5,t:3.8,h:[]},{n:'Freezer',lo:-22,hi:-18,t:-20,h:[]},{n:'Ripening chamber',lo:12,hi:15,t:13.5,h:[]}];
+  let fault=false;const over=[0,0,0,0];
+  const rand=AC.rng(7);
+  function tick(){
+    U.forEach((u,i)=>{
+      const mid=(u.lo+u.hi)/2;
+      u.t+=(mid-u.t)*.2+(rand()-.5)*.35+(i===0&&fault?.7:0);
+      u.h.push(u.t);if(u.h.length>40)u.h.shift();
+      over[i]=u.t>u.hi?over[i]+1:0;
+    });
+    draw();
+  }
+  function draw(){
+    el('units').innerHTML=U.map((u,i)=>{
+      const mn=u.lo-5,mx=u.hi+8,W=300,H=70;
+      const y=v=>H-(AC.clamp(v,mn,mx)-mn)/(mx-mn)*H;
+      const pts=u.h.map((v,k)=>(k/39*W).toFixed(0)+','+y(v).toFixed(0)).join(' ');
+      const bad=u.t>u.hi||u.t<u.lo;
+      return '<div class="unit"><div class="inline" style="justify-content:space-between"><b>'+u.n+'</b><span class="chip '+(bad?'bad':'ok')+'">'+(bad?'Out of range':'In range')+'</span></div><div class="t">'+u.t.toFixed(1)+' &deg;C</div><svg viewBox="0 0 300 70" preserveAspectRatio="none" role="img" aria-label="'+u.n+' temperature"><rect x="0" y="'+y(u.hi)+'" width="300" height="'+(y(u.lo)-y(u.hi))+'" fill="#D8EEDF"/><polyline points="'+pts+'" fill="none" stroke="'+(bad?'#D1382C':'#14213D')+'" stroke-width="2"/></svg><span class="note">Safe range '+u.lo+' to '+u.hi+' &deg;C</span></div>';
+    }).join('');
+    const a=[];
+    U.forEach((u,i)=>{if(over[i]>=5)a.push('<div class="alert">'+u.n+' has been above '+u.hi+' &deg;C for '+over[i]+' readings. Move dairy and cut fruit to another room and call maintenance.</div>');});
+    el('alertBox').innerHTML=a.join('');
+  }
+  el('fault').onclick=()=>{fault=true;};
+  el('fix').onclick=()=>{fault=false;};
+  for(let k=0;k<40;k++)tick();
+  setInterval(tick,1000);
+
+  // Anomaly detector
+  const r2=AC.rng(21);
+  const gen=(base,sd,idx,bump)=>Array.from({length:30},(_,d)=>Math.round((base+(r2()-.5)*2*sd+(d===idx?bump:0))*10)/10);
+  const M=[
+    {n:'Energy use',unit:'kWh per tonne',data:gen(118,6,21,52),checks:'Check the refrigeration load, machines left running while idle, and open doors.'},
+    {n:'Overproduction',unit:'% above order',data:gen(4,1.4,13,9),checks:'Check the order sheet against the batch size and whether the forecast was overridden.'},
+    {n:'Machine downtime',unit:'minutes per day',data:gen(35,10,26,95),checks:'Check the maintenance log, spare parts and the shift handover notes.'}
+  ];
+  let am=0;
+  function anomalies(){
+    const m=M[am],d=m.data,mean=d.reduce((a,b)=>a+b,0)/d.length,sd=Math.sqrt(d.reduce((a,b)=>a+(b-mean)*(b-mean),0)/d.length);
+    const flags=[];d.forEach((v,i)=>{const z=(v-mean)/sd;if(Math.abs(z)>2.5)flags.push({i,v,z});});
+    const W=560,H=240,pad=34,mx=Math.max.apply(null,d)*1.08,mn=Math.min.apply(null,d)*.9;
+    const X=i=>pad+i/(d.length-1)*(W-pad-10),Y=v=>H-24-(v-mn)/(mx-mn)*(H-44);
+    let g='<svg class="chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+m.n+' over 30 days"><line x1="'+pad+'" x2="'+(W-10)+'" y1="'+Y(mean)+'" y2="'+Y(mean)+'" stroke="#2F7D4F" stroke-dasharray="5 4"/><text x="'+(pad+4)+'" y="'+(Y(mean)-5)+'" font-size="11" fill="#2F7D4F">typical '+mean.toFixed(0)+'</text>';
+    g+='<polyline fill="none" stroke="#14213D" stroke-width="2" points="'+d.map((v,i)=>X(i).toFixed(0)+','+Y(v).toFixed(0)).join(' ')+'"/>';
+    flags.forEach(f=>{g+='<circle cx="'+X(f.i)+'" cy="'+Y(f.v)+'" r="7" fill="#D1382C" stroke="#fff" stroke-width="2"/>';});
+    g+='<text x="'+pad+'" y="'+(H-6)+'" font-size="11">Day 1</text><text x="'+(W-10)+'" y="'+(H-6)+'" font-size="11" text-anchor="end">Day 30</text><text x="4" y="14" font-size="11">'+m.unit+'</text></svg>';
+    el('anChart').innerHTML=g;
+    el('anList').innerHTML=flags.length?flags.map(f=>'<p><b>Day '+(f.i+1)+':</b> '+f.v+' '+m.unit+', about '+Math.abs(f.z).toFixed(1)+' standard deviations '+(f.z>0?'above':'below')+' the usual '+mean.toFixed(0)+'.<br><span class="note">'+m.checks+'</span></p>').join(''):'<p>Nothing unusual in the last 30 days.</p>';
+  }
+  document.querySelector('.tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;am=+b.dataset.m;document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-pressed',x===b));anomalies();});
+  anomalies();
+
+  // Efficiency
+  const EF=[['Sorting line',92,'#2F7D4F'],['Cooker',81,'#F2A900'],['Packing',74,'#D1382C'],['Chiller',88,'#2F7D4F']];
+  el('eff').innerHTML=EF.map(e=>'<div class="eff"><span>'+e[0]+'</span><div class="track"><div class="fill" style="width:'+e[1]+'%;background:'+e[2]+'"></div></div><span>'+e[1]+'% ran</span></div>').join('')+'<p class="note">Sample readings. Packing lost the most time this week.</p>';
+
+  // Yield
+  const Y=[['P-118 Rice flour',1200,1096,90],['P-119 Tomato puree',2000,1140,58],['P-120 Fruit pulp',1500,1050,72],['P-121 Snack mix',800,752,94]];
+  el('yield').innerHTML=Y.map(y=>{const a=y[2]/y[1]*100,low=a<y[3]-2;return '<tr><td>'+y[0]+'</td><td class="num">'+y[1]+'</td><td class="num">'+y[2]+'</td><td class="num">'+a.toFixed(0)+'% <span class="note">(expected '+y[3]+'%)</span></td><td>'+(low?'<span class="chip bad">Loss above normal</span>':'<span class="chip ok">Normal</span>')+'</td></tr>';}).join('');
+
+  // Marketplace
+  const MK=[['Banana peel','120 kg','Biogas feedstock, pectin extraction','Biogas plant','Rs 2 per kg'],['Rice bran','300 kg','Cattle feed and bran oil','Feed mill','Rs 14 per kg'],['Off-spec biscuits','80 kg','Animal feed','Poultry farm','Rs 8 per kg'],['Fruit pulp trimmings','200 kg','Jam and squash base','Small jam maker','Rs 10 per kg']];
+  el('market').innerHTML=MK.map((m,i)=>'<tr><td>'+m[0]+'</td><td class="num">'+m[1]+'</td><td>'+m[2]+'</td><td>'+m[3]+'</td><td class="num">'+m[4]+'</td><td><button class="btn ghost small" type="button" data-i="'+i+'">Request pickup</button></td></tr>').join('');
+  el('market').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;b.textContent='Requested';b.disabled=true;});
+})();
+</script>
+</body>
+</html>
